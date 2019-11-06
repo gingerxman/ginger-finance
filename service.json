@@ -1,0 +1,5 @@
+{
+	"name": "ginger-finance",
+	"type": "golang-service",
+	"default_port": 3133
+}
