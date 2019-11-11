@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/gingerxman/eel"
 )
 
@@ -50,7 +49,6 @@ func (this *UserRepository) GetUsers(ids []int) []*User {
 
 	respData := resp.Data()
 	userDatas := respData.Get("users")
-	fmt.Println(userDatas)
 	return this.makeUsers(userDatas.MustArray())
 }
 

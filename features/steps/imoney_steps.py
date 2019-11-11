@@ -13,6 +13,10 @@ def get_imoney_id_by_code(code):
 	objs = bdd_util.exec_sql("select * from imoney_imoney where code = %s", [code])
 	return objs[0]['id']
 
+def get_frozen_record_id_by_code(imoney_code, amount):
+	objs = bdd_util.exec_sql("select * from account_frozen_record where imoney_code = %s and amount = %s", [imoney_code, amount])
+	return objs[0]['id']
+
 IMONEY_STATUS_NAME2STATUS = {
 	u'启用': 1,
 	u'停用': 0
@@ -23,47 +27,6 @@ IMONEY_STATUS_STATUS2NAME = {
 	0: u'停用'
 }
 
-@Given(u"系统配置虚拟资产222")
-def step_impl(context):
-	context.execute_steps(u"Given gigner登录系统")
-	imoney_configs = json.loads(context.text)
-	plutus_db = db_util.SQLService.use("plutus")
-
-	for imoney_config in imoney_configs:
-		code = imoney_config['code']
-		exchange_rate = imoney_config['exchange_rate']
-		display_name = imoney_config.get('display_name', code)
-		enable_fraction = imoney_config.get('enable_fraction', True)
-		is_payable = imoney_config.get('is_payable', True)
-		is_debtable = imoney_config.get('is_debtable', False)
-
-		sql = """
-			select id from imoney_imoney 
-			where code='{}';
-		""".format(code)
-		record = plutus_db.execute_sql(sql).fetchone()
-		if record[0] > 0:
-			sql = """
-				update imoney_imoney 
-				set exchange_rate={}, display_name='{}', enable_fraction={}, is_payable={}, is_debtable={} 
-				where code='{}';
-			""".format(exchange_rate, display_name, int(enable_fraction), int(is_payable), int(is_debtable), code)
-			plutus_db.execute_sql(sql)
-
-		else:
-			sql = """
-				insert into imoney_imoney(code, display_name, exchange_rate, enable_fraction, is_payable, is_debtable, created_at) 
-				values('{}', '{}', {}, {}, {}, {}, '{}');
-			""".format(
-				code,
-				display_name,
-				exchange_rate,
-				int(enable_fraction),
-				int(is_payable),
-				int(is_debtable),
-				datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-			)
-			plutus_db.execute_sql(sql)
 
 @Given(u"{corp_user}配置虚拟资产")
 def step_impl(context, corp_user):
@@ -104,24 +67,35 @@ def step_impl(context, user_name, amount, imoney_code):
 def step_impl(context, user, amount, imoney_code):
 	step = u"Given 系统为'%s'转账'%s'个'%s'" % (user, amount, imoney_code)
 	context.execute_steps(step)
-	# bid = BidFactory().generate_order_bid()
-	# rmb_amount = ImoneyExchangeService().exchange(imoney_code, 'rmb', amount)
-	# user_id = user_util.get_user_id_by_name(user)
-	# # 先发起一笔订单结算
-	# settlement_data = {
-	# 	'bid': bid,
-	# 	'money': round(rmb_amount, 2),
-	# 	'imoney_code': 'rmb',
-	# 	'name': 'sys.imoney_deposit',
-	# 	'source_user_id': user_id
-	# }
-	#
-	# req_data = {
-	# 	'settlement_data': json.dumps(settlement_data),
-	# 	'order_data': json.dumps(order_util.genDepositOrder(settlement_data, imoney_code, float(amount)))
-	# }
-	# response = context.client.put('settlement.settlement', req_data)
-	# bdd_util.assert_api_call_success(response)
+
+
+@when(u"{user}使用'{amount}'个'{imoney_code}'")
+def step_impl(context, user, amount, imoney_code):
+	response = context.client.put('imoney.frozen_record', {
+		'imoney_code': imoney_code,
+		'amount': amount,
+		'type': 'consume',
+		'remark': ''
+	})
+	bdd_util.assert_api_call(response, context)
+
+@when(u"{user}取消对'{amount}'个'{imoney_code}'的使用")
+def step_impl(context, user, amount, imoney_code):
+	record_id = get_frozen_record_id_by_code(imoney_code, amount)
+	response = context.client.delete('imoney.frozen_record', {
+		'id': record_id
+	})
+	bdd_util.assert_api_call(response, context)
+
+@then(u"{user}能获得已冻结虚拟资产'{imoney_code}'")
+def step_impl(context, user, imoney_code):
+	expected = json.loads(context.text)
+	response = context.client.get('imoney.frozen_record', {
+		'imoney_code': imoney_code
+	})
+	actual = response.data
+
+	bdd_util.assert_dict(expected, actual)
 
 @then(u"{user}拥有'{amount}'个'{imoney_code}'")
 def step_impl(context, user, amount, imoney_code):
@@ -140,7 +114,7 @@ def step_impl(context, user, imoney_code):
 	actual = response.data
 	expected = json.loads(context.text)['balance']
 
-	assert round(float(actual), 2) == round(float(expected), 2)
+	assert actual == expected, 'actual(%s) != expected(%d)' % (actual, expected)
 
 @when(u"{user}通过虚拟资产'{imoney_code}'的数量为'{count}'的提现申请")
 def step_impl(context, user, imoney_code, count):
@@ -301,27 +275,6 @@ def step_impl(context, user):
 			'remark': data.get('remark', '')
 		})
 		bdd_util.assert_api_call(response, context)
-
-@when(u"系统冻结'{user}'的虚拟资产")
-def step_impl(context, user):
-	data = json.loads(context.text)
-	response = context.client.put('imoney.frozen_record', {
-		'imoney_code': data['imoney'],
-		'amount': data['amount'],
-		'type': 0
-	})
-
-	bdd_util.assert_api_call(response, context)
-
-@then(u"{user}能获得已冻结虚拟资产'{imoney_code}'")
-def step_impl(context, user, imoney_code):
-	expected = json.loads(context.text)
-	response = context.client.get('imoney.frozen_record', {
-		'imoney_code': imoney_code
-	})
-	actual = response.data
-
-	bdd_util.assert_dict(expected, actual)
 
 @when(u"系统发起周期提现")
 def step_impl(context):

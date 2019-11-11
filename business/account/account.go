@@ -84,7 +84,7 @@ func NewAccountFromModel(ctx context.Context, dbModel *m_account.Account) *Accou
 	instance.Id = dbModel.Id
 	instance.Code = dbModel.Code
 	instance.IsDebtable = dbModel.IsDebtable
-	instance.Balance = dbModel.Balance
+	instance.Balance = dbModel.Balance - dbModel.FrozenAmount
 	instance.FrozenAmount = dbModel.FrozenAmount
 	
 	return instance

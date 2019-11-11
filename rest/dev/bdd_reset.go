@@ -30,6 +30,11 @@ func (this *BDDReset) Put(ctx *eel.Context) {
 	bCtx := ctx.GetBusinessContext()
 	o := eel.GetOrmFromContext(bCtx)
 	
+	o.Exec("delete from system_trigger_log")
+	
+	o.Exec("delete from clearing_record")
+	o.Exec("delete from clearing_rule")
+	
 	o.Exec("delete from imoney_imoney")
 	
 	o.Exec("delete from account_transfer")

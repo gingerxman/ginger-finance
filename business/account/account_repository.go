@@ -141,7 +141,6 @@ func (this *AccountRepository) GetId2Account(ids []int) map[int]*Account{
 	return id2Account
 }
 
-
 func NewAccountRepository(ctx context.Context) *AccountRepository{
 	instance := new(AccountRepository)
 	instance.Ctx = ctx

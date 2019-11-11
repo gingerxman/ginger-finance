@@ -71,7 +71,7 @@ func (this *Transfer) Put(ctx *eel.Context){
 	}
 
 	amount, _ := req.GetInt("amount", 0)
-	remark := req.GetString("remark", "直接转账")
+	remark := req.GetString("trigger", "直接转账")
 	bid := req.GetString("bid")
 
 	transfer := b_transfer.NewTransferService(bCtx).Transfer(b_transfer.TransferParams{

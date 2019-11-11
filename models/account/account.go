@@ -49,11 +49,18 @@ var ACCOUNT_FROZEN_STATUS = map[string]int8{
 	"UNFROZEN": FR_STATUS_UNFROZEN, // 已解冻
 	"SETTLED": FR_STATUS_SETTLED, // 已消费
 }
-var FROZEN_TYPE = map[string]int8{
-	"UNKNOWN": 0, // 未知类型
-	"ORDER_IMONEY": 1, // 订单虚拟资产
-	"WITHDRAW": 2, // 提现
-	"DEDUCTION": 3, // 扣款
+
+var STR2FROZENTYPE = map[string]int8{
+	"unknown": 0, // 未知类型
+	"consume": 1, // 订单虚拟资产
+	"withdraw": 2, // 提现
+	"deduction": 3, // 扣款
+}
+var FROZENTYPE2STR = map[int8]string {
+	0: "unknown",
+	1: "consume",
+	2: "withdraw",
+	3: "dedution",
 }
 type FrozenRecord struct{
 	eel.Model

@@ -19,75 +19,75 @@ type FrozenAccountService struct{
 	eel.ServiceBase
 }
 
-// increaseFrozenAmountForAccount 增加冻结数额
-func (this *FrozenAccountService) increaseFrozenAmountForAccount(account *b_account.Account, amount int){
-	account.FrozenAmount = account.FrozenAmount + amount
-	if account.FrozenAmount > account.Balance && !account.CanOverdraw() {
-		panic(eel.NewBusinessError("not_enough_balance", "余额不足,无法完成资金冻结"))
-	}
-	
-	db := eel.GetOrmFromContext(this.Ctx).Model(&m_account.Account{}).Where("id", account.Id).Update(gorm.Params{
-		"frozen_amount": gorm.Expr("frozen_amount + ?", amount),
-		"updated_at": time.Now(),
-	})
-	err := db.Error
-	if err != nil{
-		eel.Logger.Error(err)
-		panic(eel.NewBusinessError("increase_frozen_amount:failed", "增加账户冻结金额失败"))
-	}
-}
-
-// releaseFrozenRecordForAccount 释放冻结资产
-func (this *FrozenAccountService) releaseFrozenRecordForAccount(account *b_account.Account, frozenRecord *FrozenRecord, toStatus int8){
-	o := eel.GetOrmFromContext(this.Ctx)
-	db := o.Model(&m_account.FrozenRecord{}).Where("id", frozenRecord.Id).Update(gorm.Params{
-		"status": toStatus,
-		"updated_at": time.Now(),
-	})
-	err := db.Error
-	frozenRecord.Status = toStatus
-
-	if err != nil{
-		eel.Logger.Error(err)
-		panic(eel.NewBusinessError("unfrozen_account:failed", "解冻资产失败"))
-	}
-
-	//if account.UseTrigger(){
-	//	return
-	//}
-	//amount := frozenRecord.Amount
-	//account.FrozenAmount = account.FrozenAmount.Sub(amount)
-	//if account.FrozenAmount.LessThan(constant.DECIMAL_ZERO){
-	//	panic(eel.NewBusinessError("negative_frozen_amount", "冻结金额已成负值"))
-	//}
-	//
-	//fAmount, _ := amount.Float64()
-	//
-	//updateSql := "UPDATE account_account SET frozen_amount=frozen_amount-?, updated_at=? WHERE id=? AND frozen_amount>=?"
-	//updateParams := []interface{}{fAmount, time.Now(), account.Id, fAmount}
-	//
-	//res, err := o.Raw(updateSql, updateParams...).Exec()
-	//
-	//if err != nil{
-	//	eel.Logger.Error(err)
-	//	panic(eel.NewBusinessError("decrease_frozen_amount:failed", "减少账户冻结金额失败"))
-	//}
-	//
-	//updatedCount, _ := res.RowsAffected()
-	//if updatedCount == 0{
-	//	panic(eel.NewBusinessError("decrease_frozen_amount:failed", "账户冻结金额不足"))
-	//}
-}
+//// increaseFrozenAmountForAccount 增加冻结数额
+//func (this *FrozenAccountService) increaseFrozenAmountForAccount(account *b_account.Account, amount int){
+//	account.FrozenAmount = account.FrozenAmount + amount
+//	if account.FrozenAmount > account.Balance && !account.CanOverdraw() {
+//		panic(eel.NewBusinessError("not_enough_balance", "余额不足,无法完成资金冻结"))
+//	}
+//
+//	db := eel.GetOrmFromContext(this.Ctx).Model(&m_account.Account{}).Where("id", account.Id).Update(gorm.Params{
+//		"frozen_amount": gorm.Expr("frozen_amount + ?", amount),
+//		"updated_at": time.Now(),
+//	})
+//	err := db.Error
+//	if err != nil{
+//		eel.Logger.Error(err)
+//		panic(eel.NewBusinessError("increase_frozen_amount:failed", "增加账户冻结金额失败"))
+//	}
+//}
+//
+//// releaseFrozenRecordForAccount 释放冻结资产
+//func (this *FrozenAccountService) releaseFrozenRecordForAccount(account *b_account.Account, frozenRecord *FrozenRecord, toStatus int8){
+//	o := eel.GetOrmFromContext(this.Ctx)
+//	db := o.Model(&m_account.FrozenRecord{}).Where("id", frozenRecord.Id).Update(gorm.Params{
+//		"status": toStatus,
+//		"updated_at": time.Now(),
+//	})
+//	err := db.Error
+//	frozenRecord.Status = toStatus
+//
+//	if err != nil{
+//		eel.Logger.Error(err)
+//		panic(eel.NewBusinessError("unfrozen_account:failed", "解冻资产失败"))
+//	}
+//
+//	//if account.UseTrigger(){
+//	//	return
+//	//}
+//	//amount := frozenRecord.Amount
+//	//account.FrozenAmount = account.FrozenAmount.Sub(amount)
+//	//if account.FrozenAmount.LessThan(constant.DECIMAL_ZERO){
+//	//	panic(eel.NewBusinessError("negative_frozen_amount", "冻结金额已成负值"))
+//	//}
+//	//
+//	//fAmount, _ := amount.Float64()
+//	//
+//	//updateSql := "UPDATE account_account SET frozen_amount=frozen_amount-?, updated_at=? WHERE id=? AND frozen_amount>=?"
+//	//updateParams := []interface{}{fAmount, time.Now(), account.Id, fAmount}
+//	//
+//	//res, err := o.Raw(updateSql, updateParams...).Exec()
+//	//
+//	//if err != nil{
+//	//	eel.Logger.Error(err)
+//	//	panic(eel.NewBusinessError("decrease_frozen_amount:failed", "减少账户冻结金额失败"))
+//	//}
+//	//
+//	//updatedCount, _ := res.RowsAffected()
+//	//if updatedCount == 0{
+//	//	panic(eel.NewBusinessError("decrease_frozen_amount:failed", "账户冻结金额不足"))
+//	//}
+//}
 
 // FrozenForAccount 冻结资产
-func (this *FrozenAccountService) FrozenForAccount(account *b_account.Account, amount int, extraData map[string]interface{}) *FrozenRecord {
+func (this *FrozenAccountService) FrozenForAccount(account *b_account.Account, amount int, frozenType string, remark string) *FrozenRecord {
 	dbModel := &m_account.FrozenRecord{
 		AccountId:  account.Id,
 		ImoneyCode: account.GetImoneyCode(),
 		Amount:     amount,
-		Type:       extraData["type"].(int8),
+		Type:       m_account.STR2FROZENTYPE[frozenType],
 		Status:     m_account.ACCOUNT_FROZEN_STATUS["FROZEN"],
-		ExtraData:  eel.ToJsonString(extraData),
+		ExtraData:  eel.ToJsonString(eel.Map{}),
 	}
 	db := eel.GetOrmFromContext(this.Ctx).Create(dbModel)
 	err := db.Error
@@ -95,28 +95,39 @@ func (this *FrozenAccountService) FrozenForAccount(account *b_account.Account, a
 		eel.Logger.Error(err)
 		errCode := "frozen_account:failed"
 		if strings.Contains(err.Error(), "[mysql trigger]"){
-			errCode = "not_enough_balance"
+			errCode = "frozen_record:not_enough_balance"
 		}
 		panic(eel.NewBusinessError(errCode, "保存冻结记录失败"))
 	}
-	this.increaseFrozenAmountForAccount(account, amount)
 	return NewFrozenRecordFromModel(this.Ctx, dbModel)
 }
 
 // UnfrozenForAccount 解冻资产
 func (this *FrozenAccountService) UnfrozenForAccount(account *b_account.Account, frozenRecord *FrozenRecord){
-	this.releaseFrozenRecordForAccount(account, frozenRecord, m_account.ACCOUNT_FROZEN_STATUS["UNFROZEN"])
+	toStatus := m_account.ACCOUNT_FROZEN_STATUS["UNFROZEN"]
+	o := eel.GetOrmFromContext(this.Ctx)
+	db := o.Model(&m_account.FrozenRecord{}).Where("id", frozenRecord.Id).Update(gorm.Params{
+		"status": toStatus,
+		"updated_at": time.Now(),
+	})
+	
+	err := db.Error
+	if err != nil{
+		eel.Logger.Error(err)
+		panic(eel.NewBusinessError("unfrozen_account:failed", "解冻资产失败"))
+	}
+	frozenRecord.Status = toStatus
 }
 
 func (this *FrozenAccountService) getDestAccount(frozenRecord *FrozenRecord) *b_account.Account {
 	var destAccount *b_account.Account
 	accountRepository := b_account.NewAccountRepository(this.Ctx)
 	switch frozenRecord.FrozenType {
-	case m_account.FROZEN_TYPE["WITHDRAW"]:
+	case m_account.STR2FROZENTYPE["withdraw"]:
 		destAccount = accountRepository.GetByCode(fmt.Sprintf("withdraw_%s", frozenRecord.ImoneyCode))
-	case m_account.FROZEN_TYPE["DEDUCTION"]:
+	case m_account.STR2FROZENTYPE["deduction"]:
 		destAccount = accountRepository.GetByCode(frozenRecord.ImoneyCode)
-	case m_account.FROZEN_TYPE["ORDER_IMONEY"]:
+	case m_account.STR2FROZENTYPE["consume"]:
 		destAccount = accountRepository.GetByCode(frozenRecord.ImoneyCode)
 	default:
 		panic(eel.NewBusinessError("settleFrozenAccount:failed", "不合法的冻结记录"))
@@ -129,9 +140,6 @@ func (this *FrozenAccountService) SettleFrozenForAccount(account *b_account.Acco
 
 	amount := frozenRecord.Amount
 	destAccount := this.getDestAccount(frozenRecord)
-
-	// 考虑到触发器，先解冻资产
-	this.releaseFrozenRecordForAccount(account, frozenRecord, m_account.ACCOUNT_FROZEN_STATUS["SETTLED"])
 
 	transferParams := b_transfer.TransferParams{
 		SourceAccount: account,
@@ -180,13 +188,6 @@ func (this *FrozenAccountService) RollbackSettledFrozenRecord(frozenRecord *Froz
 			panic(eel.NewBusinessError("rollback_frozen:failed", "回滚冻结消费失败"))
 		}
 
-		account := b_account.NewAccountRepository(this.Ctx).GetById(frozenRecord.AccountId)
-		
-		// 减少平台账户余额
-		// pass
-
-		// 增加冻结资产余额
-		this.increaseFrozenAmountForAccount(account, frozenRecord.Amount)
 	}
 
 	frozenRecord.Status = m_account.ACCOUNT_FROZEN_STATUS["FROZEN"]

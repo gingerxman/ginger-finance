@@ -79,3 +79,66 @@ BEGIN
 END
 $$
 DELIMITER ;
+
+
+
+DROP TRIGGER IF EXISTS frozen_record_insert_trigger;
+DELIMITER $$
+CREATE TRIGGER frozen_record_insert_trigger AFTER INSERT ON account_frozen_record FOR EACH ROW
+BEGIN
+    DECLARE account_code VARCHAR(128);
+    DECLARE account_balance DECIMAL(30,2);
+    DECLARE account_frozen_amount DECIMAL(30,2);
+    DECLARE account_is_debtable TINYINT;
+    DECLARE trigger_name VARCHAR(1024);
+    DECLARE fn_result TINYINT;
+
+    SET trigger_name = "frozen_record_insert_trigger";
+    SET fn_result = record_trigger_action(trigger_name, new.id, "triggered", "");
+
+    SELECT balance, code, frozen_amount, is_debtable into account_balance, account_code, account_frozen_amount, account_is_debtable
+    FROM account_account WHERE id=new.account_id;
+    IF (account_frozen_amount + new.amount > account_balance) && !can_overdraw_account(account_code, account_is_debtable) THEN
+        SET fn_result = record_trigger_action(trigger_name, new.id, "failed", "余额不足,无法完成资金冻结");
+        SIGNAL SQLSTATE 'HY000' SET MESSAGE_TEXT = "[mysql trigger]: 余额不足,无法完成资金冻结";
+    ELSE
+        UPDATE account_account SET frozen_amount=frozen_amount+new.amount, updated_at=NOW() WHERE id=new.account_id;
+    END IF;
+    SET fn_result = record_trigger_action(trigger_name, new.id, "done", "succeed");
+END
+$$
+DELIMITER ;
+
+
+
+DROP TRIGGER IF EXISTS frozen_record_update_trigger;
+DELIMITER $$
+CREATE TRIGGER frozen_record_update_trigger AFTER UPDATE ON account_frozen_record FOR EACH ROW
+BEGIN
+    DECLARE account_frozen_amount DECIMAL(30,2);
+    DECLARE trigger_name VARCHAR(1024);
+    DECLARE fn_result TINYINT;
+
+    SET trigger_name = "frozen_record_update_trigger";
+    SET fn_result = record_trigger_action(trigger_name, new.id, "triggered", "");
+
+    IF old.status<>new.status THEN
+        IF new.status = 2 || new.status = 3 THEN
+            SELECT frozen_amount into account_frozen_amount FROM account_account WHERE id=new.account_id;
+
+            IF account_frozen_amount-new.amount < 0 THEN
+                SET fn_result = record_trigger_action(trigger_name, new.id, "failed", "冻结金额已成负值");
+                SIGNAL SQLSTATE 'HY000' SET MESSAGE_TEXT = "[mysql trigger]: 冻结金额已成负值";
+            ELSE
+                UPDATE account_account SET frozen_amount=frozen_amount-new.amount, updated_at=NOW() WHERE id=new.account_id AND frozen_amount>=new.amount;
+                IF ROW_COUNT() <> 1 THEN
+                    SET fn_result = record_trigger_action(trigger_name, new.id, "failed", "账户冻结金额不足");
+                    SIGNAL SQLSTATE 'HY000' SET MESSAGE_TEXT = "[mysql trigger]: 账户冻结金额不足";
+                END IF;
+            END IF;
+            SET fn_result = record_trigger_action(trigger_name, new.id, "done", "succeed");
+        END IF;
+    END IF;
+END
+$$
+DELIMITER ;

@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -16,6 +15,5 @@ func RandomBooleanByRatio(ratio float64) bool{
 	}
 	randomIndex := r.Intn(10)
 	result := flagArray[randomIndex]
-	fmt.Println("RandomBooleanByRatio: ", flagArray, randomIndex, result)
 	return result
 }

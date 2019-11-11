@@ -88,6 +88,19 @@ func (this *TransferRepository) GetByThirdBid(bid string) []*Transfer{
 	return this.GetByFilters(filters)
 }
 
+func (this *TransferRepository) GetByBid(bid string) []*Transfer{
+	filters := eel.Map{
+		"bid": bid,
+	}
+	return this.GetByFilters(filters)
+}
+
+func (this *TransferRepository) IsSettled(bid string) bool {
+	o := eel.GetOrmFromContext(this.Ctx)
+	
+	return o.Model(&m_account.Transfer{}).Where("third_bid", bid).Exist()
+}
+
 func NewTransferRepository(ctx context.Context) *TransferRepository{
 	instance := new(TransferRepository)
 	instance.Ctx = ctx

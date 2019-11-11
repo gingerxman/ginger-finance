@@ -43,6 +43,22 @@ func (this *Corp) GetPlatformId() int {
 	//return this.PlatformId
 }
 
+func (this *Corp) GetRelatedUser() *User {
+	resp, err := eel.NewResource(this.Ctx).LoginAsManager().Get("ginger-account", "corp.related_user_id", eel.Map{
+		"corp_id": this.Id,
+	})
+	
+	if err != nil {
+		eel.Logger.Error(err)
+		return nil
+	}
+	
+	respData := resp.Data()
+	userId := respData.Get("id").MustInt()
+	
+	return NewUserFromOnlyId(this.Ctx, userId)
+}
+
 func GetPlatformId() int {
 	return _PLATFORM_CORP_ID
 	//return this.PlatformId
