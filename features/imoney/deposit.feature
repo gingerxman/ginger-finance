@@ -29,7 +29,7 @@ Feature: 虚拟资产充值
 		"""
 
 
-@ginger-finance @imoney
+@ginger-finance @imoney @wip
 Scenario: 用户可以充值虚拟资产
 	Given lucy访问'jobs'的商城
 	When lucy充值'1000'个'cash'

@@ -249,6 +249,8 @@ def get_date_str(str):
 	date = get_date(str)
 	return date.strftime('%Y-%m-%d')
 
+def format_price(price):
+	return round(price / 100.0, 2)
 #
 # #获得corp user对应的corp的id
 # def get_corp_id_for_corpuser(client, username):

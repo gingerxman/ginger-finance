@@ -16,7 +16,7 @@ func (this *Balance) Resource() string{
 
 func (this *Balance) GetParameters() map[string][]string{
 	return map[string][]string{
-		"GET": []string{"imoney_code", "?with_options:json"},
+		"GET": []string{"imoney_code", "?view_corp_account:bool", "?with_options:json"},
 	}
 }
 
@@ -25,8 +25,16 @@ func (this *Balance) Get(ctx *eel.Context){
 	bCtx := ctx.GetBusinessContext()
 	req := ctx.Request
 	
+	viewCorpAccount, _ := req.GetBool("view_corp_account", false)
 	imoneyCode := req.GetString("imoney_code")
-	user := b_user.GetUserFromContext(bCtx)
+	
+	var user *b_user.User
+	if viewCorpAccount {
+		corp := b_user.GetCorpFromContext(bCtx)
+		user = corp.GetRelatedUser()
+	} else {
+		user = b_user.GetUserFromContext(bCtx)
+	}
 
 	account := b_account.NewAccountRepository(bCtx).GetByUser(user, imoneyCode)
 	ctx.Response.JSON(account.Balance)

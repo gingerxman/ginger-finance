@@ -2,6 +2,7 @@ package imoney
 
 import (
 	"context"
+	"fmt"
 	
 	"github.com/gingerxman/eel"
 	m_imoney "github.com/gingerxman/ginger-finance/models/imoney"
@@ -46,6 +47,7 @@ func (this *InitImoneyService) Init() {
 	}
 
 	for _, imoney := range Code2Imoney{
+		eel.Logger.Debug(fmt.Sprintf("init imoney %s", imoney["code"].(string)))
 		isDebtable := false
 		if val, ok := imoney["is_debtable"]; ok{
 			isDebtable = val.(bool)

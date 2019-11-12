@@ -14,6 +14,7 @@ def get_imoney_id_by_code(code):
 	return objs[0]['id']
 
 def get_frozen_record_id_by_code(imoney_code, amount):
+	sql = "select * from account_frozen_record where imoney_code = %s and amount = %s", [imoney_code, amount]
 	objs = bdd_util.exec_sql("select * from account_frozen_record where imoney_code = %s and amount = %s", [imoney_code, amount])
 	return objs[0]['id']
 
@@ -57,7 +58,7 @@ def step_impl(context, user_name, amount, imoney_code):
 		"source_user_id": 0,#client.cur_user_id,
 		"dest_user_id": user_id,
 		"imoney_code": imoney_code,
-		"amount": amount,
+		"amount": int(amount) * 100,
 		"bid": "bdd"
 	}
 	resp = context.client.put('imoney.transfer', data)
@@ -73,7 +74,7 @@ def step_impl(context, user, amount, imoney_code):
 def step_impl(context, user, amount, imoney_code):
 	response = context.client.put('imoney.frozen_record', {
 		'imoney_code': imoney_code,
-		'amount': amount,
+		'amount': int(amount) * 100,
 		'type': 'consume',
 		'remark': ''
 	})
@@ -81,7 +82,8 @@ def step_impl(context, user, amount, imoney_code):
 
 @when(u"{user}取消对'{amount}'个'{imoney_code}'的使用")
 def step_impl(context, user, amount, imoney_code):
-	record_id = get_frozen_record_id_by_code(imoney_code, amount)
+	amount = int(amount)
+	record_id = get_frozen_record_id_by_code(imoney_code, 100*amount)
 	response = context.client.delete('imoney.frozen_record', {
 		'id': record_id
 	})
@@ -94,6 +96,7 @@ def step_impl(context, user, imoney_code):
 		'imoney_code': imoney_code
 	})
 	actual = response.data
+	actual['frozen_amount'] = bdd_util.format_price((actual['frozen_amount']))
 
 	bdd_util.assert_dict(expected, actual)
 
@@ -103,7 +106,7 @@ def step_impl(context, user, amount, imoney_code):
 		'imoney_code': imoney_code,
 	})
 	balance = response.data['valid_balance']
-	assert int(amount) == int(float(balance)), u'账户余额不对: expect(%s), actual(%s)' % (amount, balance)
+	assert amount * 100 == balance, u'账户余额不对: expect(%s), actual(%s)' % (amount, balance)
 
 @then(u"{user}能获得虚拟资产'{imoney_code}'")
 def step_impl(context, user, imoney_code):
@@ -111,7 +114,7 @@ def step_impl(context, user, imoney_code):
 		'imoney_code': imoney_code,
 	})
 
-	actual = response.data
+	actual = bdd_util.format_price(response.data)
 	expected = json.loads(context.text)['balance']
 
 	assert actual == expected, 'actual(%s) != expected(%d)' % (actual, expected)

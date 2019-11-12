@@ -2,6 +2,7 @@ package dev
 
 import (
 	"github.com/gingerxman/eel"
+	"github.com/gingerxman/ginger-finance/business/imoney"
 )
 
 type BDDReset struct {
@@ -40,6 +41,8 @@ func (this *BDDReset) Put(ctx *eel.Context) {
 	o.Exec("delete from account_transfer")
 	o.Exec("delete from account_frozen_record")
 	o.Exec("delete from account_account")
+	
+	imoney.NewInitImoneyService(bCtx).Init()
 	
 	ctx.Response.JSON(eel.Map{})
 }

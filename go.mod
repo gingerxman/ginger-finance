@@ -8,9 +8,8 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v1.7.1
 	github.com/garyburd/redigo v1.6.0 // indirect
-	github.com/gingerxman/eel v0.0.0-20191107094055-157803ab2f1a
+	github.com/gingerxman/eel v0.0.0-20191111105824-cce1d2c4f24d
 	github.com/gingerxman/gorm v1.10.4
-	github.com/go-redsync/redsync v1.3.1
 	github.com/shopspring/decimal v0.0.0-20191009025716-f1972eb1d1f5 // indirect
 	gopkg.in/redsync.v1 v1.0.1 // indirect
 )
