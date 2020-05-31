@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/gingerxman/ginger-finance/business"
-	
+	"strconv"
+	"strings"
+
 	"github.com/gingerxman/eel"
 	b_imoney "github.com/gingerxman/ginger-finance/business/imoney"
 	m_account "github.com/gingerxman/ginger-finance/models/account"
@@ -17,8 +19,6 @@ type CreateAccountParams struct{
 	IsDebtable bool
 	WithDebtable bool
 }
-
-var imoney2debtable = make(map[string]bool) // IMoney是否可负债
 
 type AccountFactory struct{
 	eel.ServiceBase
@@ -38,7 +38,7 @@ func (this *AccountFactory) CreateForUser(user business.IUser, params CreateAcco
 		if userId == 0{
 			params.AccountCode = imoneyCode
 		}else{
-			params.AccountCode = fmt.Sprintf("%s_%d", imoneyCode, userId)
+			params.AccountCode = fmt.Sprintf("%s.user.%d", imoneyCode, userId)
 		}
 	}
 
@@ -52,66 +52,58 @@ func (this *AccountFactory) GetOrCreate(params CreateAccountParams) *Account{
 	var dbModel m_account.Account
 	if db.Exist(){
 		db := db.Take(&dbModel)
-		err := db.Error
-		if err != nil{
+		if err := db.Error; err != nil{
 			eel.Logger.Error(err)
 			panic(eel.NewBusinessError("account:get_failed", "获取财务账户失败"))
 		}
 	}else{
 		var isDebtable bool
+		var imoneyCode string
 		if params.WithDebtable{
 			isDebtable = params.IsDebtable
 		}else{
-			// 如果当前的accountCode==imoneyCode，则为true, 否则以imoney的配置为准
-			var imoneyCode string
 			if params.ImoneyCode == ""{
-				imoneyCode = NewParseAccountCodeService(this.Ctx).ParseImoneyCodeFromCode(params.AccountCode)
+				imoneyCode = strings.Split(params.AccountCode, ".")[0]
 			}else{
 				imoneyCode = params.ImoneyCode
 			}
-
+			// 平台账户都可负债
 			if imoneyCode == params.AccountCode{
 				isDebtable = true
 			}else{
 				imoney := b_imoney.NewImoneyRepository(this.Ctx).GetByCode(imoneyCode)
 				if imoney == nil {
-					panic(eel.NewBusinessError("imoney:invalid_imoney", imoneyCode))
+					panic(eel.NewBusinessError("imoney:invalid_imoney", "不合法的虚拟资产: "+ imoneyCode))
 				}
-				
 				isDebtable = imoney.IsDebtable
 			}
 		}
 		
-		if params.UserId == 0{
-			params.UserId = NewParseAccountCodeService(this.Ctx).ParseUserIdFromCode(params.AccountCode)
+		if params.UserId == 0 && imoneyCode != params.AccountCode {
+			sps := strings.Split(params.AccountCode, ".")
+			uid, err := strconv.Atoi(sps[len(sps) - 1])
+			if err != nil{
+				eel.Logger.Error(err)
+				panic(eel.NewBusinessError("account:parse_user_id_failed", "解析用户id失败"))
+			}
+			params.UserId = uid
 		}
 
 		dbModel = m_account.Account{
-			UserId: params.UserId,
 			Code: params.AccountCode,
-			IsDeleted: false,
+			UserId: params.UserId,
+			ImoneyCode: imoneyCode,
 			IsDebtable: isDebtable,
+			IsDeleted: false,
 		}
 		db := o.Create(&dbModel)
-		err := db.Error
-		if err != nil{
+		if err := db.Error; err != nil{
 			eel.Logger.Error(err)
 			panic(eel.NewBusinessError("account:create_failed", "创建财务账户失败"))
 		}
 	}
 	return NewAccountFromModel(this.Ctx, &dbModel)
 }
-
-func loadIMoneys() {
-	for _, imoney := range b_imoney.Code2Imoney{
-		isDebtable := false
-		if val, ok := imoney["is_debtable"]; ok{
-			isDebtable = val.(bool)
-		}
-		imoney2debtable[imoney["code"].(string)] = isDebtable
-	}
-}
-
 
 func NewAccountFactory(ctx context.Context) *AccountFactory{
 	instance := new(AccountFactory)
@@ -121,6 +113,4 @@ func NewAccountFactory(ctx context.Context) *AccountFactory{
 
 
 func init(){
-	// 初始化全局变量 imoney2debtable
-	loadIMoneys()
 }

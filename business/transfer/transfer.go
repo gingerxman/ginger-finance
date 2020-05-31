@@ -101,7 +101,7 @@ func NewTransferFromModel(ctx context.Context, dbModel *m_account.Transfer) *Tra
 	instance.SourceAmount = dbModel.SourceAmount
 	instance.DestAmount = dbModel.DestAmount
 	instance.Action = dbModel.Action
-	instance.ExtraData = dbModel.Description
+	instance.ExtraData = dbModel.ExtraData
 	instance.Digest = dbModel.Digest
 	instance.IsDeleted = dbModel.IsDeleted
 	instance.CreatedAt = dbModel.CreatedAt

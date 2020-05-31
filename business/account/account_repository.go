@@ -103,7 +103,7 @@ func (this *AccountRepository) GetByUserIds(userIds []int, imoneyCode string) []
 	accountFactory := NewAccountFactory(this.Ctx)
 	fetchedUserIds := make([]interface{}, 0)
 	for _, account := range accounts{
-		fetchedUserIds = append(fetchedUserIds, account.GetUserId())
+		fetchedUserIds = append(fetchedUserIds, account.UserId)
 	}
 	iUserIds := make([]interface{}, 0)
 	for _, userId := range userIds{
