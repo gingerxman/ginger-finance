@@ -24,8 +24,18 @@ func (this *ImoneyManager) ImoneyExisted(code string) bool{
 func (this *ImoneyManager) GetImoneyByCode(code string) *Imoney{
 	if imoney, ok := Code2Imoney[code]; ok{
 		return imoney
+	}else{ // 内存中获取不到则查数据库
+		o := eel.GetOrmFromContext(this.Ctx)
+		var dbModel m_imoney.IMoney
+		result := o.Model(&m_imoney.IMoney{}).Where("code", code).First(&dbModel)
+		if err := result.Error; err != nil{
+			eel.Logger.Error(err)
+			panic(eel.NewBusinessError("get_imoney_from_db:failed", "从db中获取imoney失败"))
+		}
+		imoney := NewImoneyFromModel(&dbModel)
+		addImoneyToRam(imoney)
+		return imoney
 	}
-	return nil
 }
 
 func (this *ImoneyManager) Add(imoney *Imoney){
@@ -44,8 +54,7 @@ func (this *ImoneyManager) Add(imoney *Imoney){
 		eel.Logger.Error(err)
 		panic(eel.NewBusinessError("imoney:save_failed", "存储imoney失败"))
 	}
-	Imoneys = append(Imoneys, imoney)
-	Code2Imoney[imoney.Code] = imoney
+	addImoneyToRam(imoney)
 }
 
 func (this *ImoneyManager) Remove(imoney *Imoney){
@@ -72,6 +81,15 @@ func NewImoneyManager(ctx context.Context) *ImoneyManager{
 	return inst
 }
 
+func addImoneyToRam(imoney *Imoney){
+	if _, ok := Code2Imoney[imoney.Code]; !ok{
+		Imoneys = append(Imoneys, imoney)
+		Code2Imoney[imoney.Code] = imoney
+	}else{
+		eel.Logger.Warn("imoney already in ram")
+	}
+}
+
 // init 从数据库中加载imoney
 func init() {
 	Imoneys = make([]*Imoney, 0)
@@ -86,7 +104,6 @@ func init() {
 	}
 	for _, dbModel := range dbModels{
 		imoney := NewImoneyFromModel(dbModel)
-		Imoneys = append(Imoneys, imoney)
-		Code2Imoney[dbModel.Code] = imoney
+		addImoneyToRam(imoney)
 	}
 }

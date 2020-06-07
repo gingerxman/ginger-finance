@@ -13,6 +13,7 @@ type IMoney struct {
 	ExchangeRate float64 `gorm:"default:1.0"`
 	IsPayable bool `gorm:"default:true"`
 	IsDebtable bool `gorm:"default:false"`
+	IsEnabled bool `gorm:"default:false"`
 }
 func (this *IMoney) TableName() string {
 	return "imoney_imoney"

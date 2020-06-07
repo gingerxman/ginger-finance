@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import MySQLdb as mysql
+import pymysql as mysql
 
 def get_db_name():
 	with open('conf/app.conf', 'rb') as f:

@@ -10,6 +10,7 @@ type Imoney struct {
 	ExchangeRate float64
 	IsPayable bool
 	IsDebtable bool
+	IsEnabled bool
 }
 
 // ExchangeCash 兑换成现金
@@ -32,6 +33,7 @@ func NewImoneyFromModel(dbModel *m_imoney.IMoney) *Imoney{
 	instance.ExchangeRate = dbModel.ExchangeRate
 	instance.IsPayable = dbModel.IsPayable
 	instance.IsDebtable = dbModel.IsDebtable
+	instance.IsEnabled = dbModel.IsEnabled
 
 	return instance
 }

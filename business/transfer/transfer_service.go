@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/gingerxman/ginger-finance/business/common/util"
-	
+	m_imoney "github.com/gingerxman/ginger-finance/models/imoney"
+
 	"github.com/gingerxman/eel"
 	"github.com/gingerxman/eel/snowflake"
 	b_account "github.com/gingerxman/ginger-finance/business/account"
@@ -122,6 +123,23 @@ func (this *TransferService) generateBid() string {
 	return result
 }
 
+// ValidateImoney 校验虚拟资产有效性
+func (this *TransferService) ValidateImoney(sourceImoneyCode, destImoneyCode string) (bool, error){
+	var dbModels []*m_imoney.IMoney
+	result := eel.GetOrmFromContext(this.Ctx).Model(&m_imoney.IMoney{}).
+		Where("code__in", []string{sourceImoneyCode, destImoneyCode}).Find(&dbModels)
+	if err := result.Error; err != nil{
+		eel.Logger.Error(err)
+		return false, eel.NewBusinessError("fetch_imoney:failed", "获取imoney失败")
+	}
+	for _, dbModel := range dbModels{
+		if !dbModel.IsEnabled{
+			return false, eel.NewBusinessError("validate_imoney_failed: imoney_is_disabled", "虚拟资产已禁用")
+		}
+	}
+	return true, nil
+}
+
 func (this *TransferService) prepareTransfer(params TransferParams) *Transfer{
 	sourceAccount := params.SourceAccount
 	destAccount := params.DestAccount
@@ -132,6 +150,12 @@ func (this *TransferService) prepareTransfer(params TransferParams) *Transfer{
 	// 不同虚拟资产交易需要兑换
 	sourceImoneyCode := sourceAccount.ImoneyCode
 	destImoneyCode := destAccount.ImoneyCode
+
+	// 虚拟资产校验
+	if succeed, err := this.ValidateImoney(sourceImoneyCode, destImoneyCode); !succeed{
+		panic(err)
+	}
+
 	if sourceAmount == destAmount && sourceImoneyCode != destImoneyCode{ // sourceAmount和destAmount不等时，认为已经兑换过
 		destAmount = b_imoney.NewImoneyExchangeService(this.Ctx).ExchangeByImoneyCode(sourceImoneyCode, destImoneyCode, sourceAmount)
 	}
