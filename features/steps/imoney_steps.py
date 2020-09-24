@@ -37,7 +37,6 @@ def step_impl(context, corp_user):
 		code = imoney_config['code']
 		exchange_rate = imoney_config['exchange_rate']
 		display_name = imoney_config.get('display_name', code)
-		enable_fraction = imoney_config.get('enable_fraction', True)
 		is_payable = imoney_config.get('is_payable', True)
 		is_debtable = imoney_config.get('is_debtable', False)
 
@@ -45,7 +44,6 @@ def step_impl(context, corp_user):
 			"code": code,
 			"exchange_rate": exchange_rate,
 			"display_name": display_name,
-			"enable_fraction": enable_fraction,
 			"is_payable": is_payable,
 			"is_debtable": is_debtable
 		})

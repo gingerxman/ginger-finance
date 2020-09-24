@@ -12,11 +12,9 @@ type EncodeImoneyService struct{
 
 func (this *EncodeImoneyService) Encode(imoney *Imoney) *RImoney{
 	return &RImoney{
-		Id: imoney.Id,
 		Code: imoney.Code,
 		DisplayName: imoney.DisplayName,
 		ExchangeRate: imoney.ExchangeRate,
-		EnableFraction: imoney.EnableFraction,
 		IsPayable: imoney.IsPayable,
 		IsDebtable: imoney.IsDebtable,
 	}

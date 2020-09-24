@@ -10,44 +10,32 @@ type Account struct {
 	eel.EntityBase
 
 	Id int
+	UserId int
+	AccountType string
 	Code string
+	ImoneyCode string
 	IsDebtable bool
 	Balance int
 	FrozenAmount int
 }
 
-// GetImoneyCode 获取账户的虚拟货币
-// 目前账户的Code有以下几种形式，可以从中解析出imoney_code
-// 1. user_cash_xx
-// 2. cash
-// 3. cash.xx
-// 4. cash.coupon.xx
-func (this *Account) GetImoneyCode() string{
-	return NewParseAccountCodeService(this.Ctx).ParseImoneyCodeFromCode(this.Code)
-}
-
-func (this *Account) GetUserId() int{
-	//return this.Model.(*m_account.Account).UserId
-	return NewParseAccountCodeService(this.Ctx).ParseUserIdFromCode(this.Code)
-}
-
-// IsPlatformNormalAccount 是否平台一般账户
-func (this *Account) IsPlatformNormalAccount() bool{
-	return this.GetUserId() == 0
+// IsSysNormalAccount 是否系统一般账户
+func (this *Account) IsSysNormalAccount() bool{
+	return this.UserId == 0
 }
 
 // CanOverdraw 是否允许透支
 // 平台一般账户都可以透支
 func (this *Account) CanOverdraw() bool{
-	if this.IsPlatformNormalAccount(){
+	if this.IsSysNormalAccount(){
 		return true
 	}
 	return this.IsDebtable
 }
 
-// ForgetAboutBalance 是否可以不用关心余额
+// ForgetAboutBalance 是否可以不用关心余额(即在交易后不更新余额)
 func (this *Account) ForgetAboutBalance() bool{
-	return this.IsPlatformNormalAccount() || this.GetImoneyCode() == "rmb"
+	return this.IsSysNormalAccount()
 }
 
 func (this *Account) GetValidBalance() int {
@@ -82,7 +70,10 @@ func NewAccountFromModel(ctx context.Context, dbModel *m_account.Account) *Accou
 	instance.Model = dbModel
 
 	instance.Id = dbModel.Id
+	instance.UserId = dbModel.UserId
+	instance.AccountType = dbModel.AccountType
 	instance.Code = dbModel.Code
+	instance.ImoneyCode = dbModel.ImoneyCode
 	instance.IsDebtable = dbModel.IsDebtable
 	instance.Balance = dbModel.Balance - dbModel.FrozenAmount
 	instance.FrozenAmount = dbModel.FrozenAmount

@@ -1,4 +1,4 @@
-package product
+package imoney
 
 import (
 	"github.com/gingerxman/eel"
@@ -11,7 +11,6 @@ type IMoney struct {
 	Code string `gorm:"size:52"`
 	DisplayName string `gorm:"size:52"`
 	ExchangeRate float64 `gorm:"default:1.0"`
-	EnableFraction bool `gorm:"default:true"`
 	IsPayable bool `gorm:"default:true"`
 	IsDebtable bool `gorm:"default:false"`
 }

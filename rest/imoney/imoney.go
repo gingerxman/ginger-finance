@@ -16,7 +16,7 @@ func (this *Imoney) Resource() string{
 func (this *Imoney) GetParameters() map[string][]string{
 	return map[string][]string{
 		"GET": []string{"code"},
-		"PUT": []string{"code", "exchange_rate:float", "display_name", "enable_fraction:bool", "is_payable:bool", "is_debtable:bool"},
+		"PUT": []string{"code", "exchange_rate:float", "display_name", "is_payable:bool", "is_debtable:bool"},
 	}
 }
 
@@ -35,17 +35,15 @@ func (this *Imoney) Put(ctx *eel.Context) {
 
 	req := ctx.Request
 	rate, _ := req.GetFloat("exchange_rate")
-	enableFraction, _ := req.GetBool("enable_fraction")
 	isPayable, _ := req.GetBool("is_payable")
 	isDebtable, _ := req.GetBool("is_debtable")
 
-	imoney := b_imoney.CreateImoney(bCtx, eel.Map{
-		"code": req.GetString("code"),
-		"display_name": req.GetString("display_name"),
-		"exchange_rate": rate,
-		"enbale_fraction": enableFraction,
-		"is_payable": isPayable,
-		"is_debtable": isDebtable,
+	b_imoney.NewImoneyManager(bCtx).Add(&b_imoney.Imoney{
+		Code: req.GetString("code"),
+		DisplayName: req.GetString("display_name"),
+		ExchangeRate: rate,
+		IsPayable: isPayable,
+		IsDebtable: isDebtable,
 	})
-	ctx.Response.JSON(b_imoney.NewEncodeImoneyService(bCtx).Encode(imoney))
+	ctx.Response.JSON(nil)
 }

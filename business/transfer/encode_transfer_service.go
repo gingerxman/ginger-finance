@@ -13,15 +13,14 @@ type EncodeTransferService struct{
 }
 
 func (this *EncodeTransferService) EncodeForAccount(account *b_account.Account, transfer *Transfer) *RTransfer{
-	parseAccountService := b_account.NewParseAccountCodeService(this.Ctx)
 	return &RTransfer{
 		Id: transfer.Id,
 		Bid: transfer.Bid,
 		ThirdBid: transfer.ThirdBid,
 		SourceAccountId: transfer.SourceAccountId,
 		DestAccountId: transfer.DestAccountId,
-		SourceUserId: parseAccountService.ParseUserIdFromCode(transfer.SourceAccount.Code),
-		DestUserId: parseAccountService.ParseUserIdFromCode(transfer.DestAccount.Code),
+		SourceUserId: transfer.SourceAccount.UserId,
+		DestUserId: transfer.DestAccount.UserId,
 		Amount: transfer.SourceAmount,
 		SourceAmount: transfer.SourceAmount,
 		DestAmount: transfer.DestAmount,

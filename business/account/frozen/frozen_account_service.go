@@ -83,7 +83,7 @@ type FrozenAccountService struct{
 func (this *FrozenAccountService) FrozenForAccount(account *b_account.Account, amount int, frozenType string, remark string) *FrozenRecord {
 	dbModel := &m_account.FrozenRecord{
 		AccountId:  account.Id,
-		ImoneyCode: account.GetImoneyCode(),
+		ImoneyCode: account.ImoneyCode,
 		Amount:     amount,
 		Type:       m_account.STR2FROZENTYPE[frozenType],
 		Status:     m_account.ACCOUNT_FROZEN_STATUS["FROZEN"],

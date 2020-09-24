@@ -16,14 +16,23 @@ package main
 
 import (
 	"github.com/gingerxman/eel"
+	"github.com/gingerxman/eel/cron"
 	"github.com/gingerxman/ginger-finance/business/user"
+	_ "github.com/gingerxman/ginger-finance/cron"
 	_ "github.com/gingerxman/ginger-finance/middleware"
 	_ "github.com/gingerxman/ginger-finance/models"
 	_ "github.com/gingerxman/ginger-finance/routers"
 )
 
 func main() {
-	eel.Runtime.NewBusinessContext = user.NewBusinessContext
-	eel.RunService()
+	if eel.GetServiceMode() == eel.SERVICE_MODE_CRON{
+		endRunning := make(chan bool, 1)
+		cron.StartCronTasks()
+		defer cron.StopCronTasks()
+		<- endRunning
+	}else{
+		eel.Runtime.NewBusinessContext = user.NewBusinessContext
+		eel.RunService()
+	}
 }
 

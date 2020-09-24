@@ -47,7 +47,7 @@ func (this *TransferService) handlePreparedTransfers(preparedTransfers []*Transf
 			Action: preparedTransfer.Action,
 			Digest: preparedTransfer.Digest,
 			IsDeleted: false,
-			Description: preparedTransfer.ExtraData,
+			ExtraData: preparedTransfer.ExtraData,
 		})
 		accountIds = append(accountIds, preparedTransfer.SourceAccountId)
 		accountIds = append(accountIds, preparedTransfer.DestAccountId)
@@ -130,8 +130,8 @@ func (this *TransferService) prepareTransfer(params TransferParams) *Transfer{
 	thirdBid := params.Bid
 
 	// 不同虚拟资产交易需要兑换
-	sourceImoneyCode := sourceAccount.GetImoneyCode()
-	destImoneyCode := destAccount.GetImoneyCode()
+	sourceImoneyCode := sourceAccount.ImoneyCode
+	destImoneyCode := destAccount.ImoneyCode
 	if sourceAmount == destAmount && sourceImoneyCode != destImoneyCode{ // sourceAmount和destAmount不等时，认为已经兑换过
 		destAmount = b_imoney.NewImoneyExchangeService(this.Ctx).ExchangeByImoneyCode(sourceImoneyCode, destImoneyCode, sourceAmount)
 	}
@@ -189,7 +189,7 @@ func (this *TransferService) TransferForFee(deductAccount *b_account.Account, fe
 		Bid: orderBid,
 		Action: fmt.Sprintf("settlement_fee: bid_%s", orderBid),
 		ExtraData: map[string]interface{}{
-			"code": destAccount.GetImoneyCode(),
+			"code": destAccount.ImoneyCode,
 			"user_type": "sys_fee",
 			"item": "fee",
 		},
@@ -201,7 +201,7 @@ func (this *TransferService) TransferForFee(deductAccount *b_account.Account, fe
 // 1、user的rmb账户 => 平台的cash账户  订单结算中完成
 // 2、平台的imoney账户 => 用户的imoney账户
 func (this *TransferService) TransferForDeposit(destAccount *b_account.Account, amount int, orderBid string) *Transfer{
-	imoneyCode := destAccount.GetImoneyCode()
+	imoneyCode := destAccount.ImoneyCode
 	sourceAccount := b_account.NewAccountRepository(this.Ctx).GetByCode(imoneyCode)
 	params := TransferParams{
 		SourceAccount: sourceAccount,

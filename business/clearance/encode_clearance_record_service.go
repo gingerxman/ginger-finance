@@ -20,8 +20,8 @@ func (this *EncodeClearanceRecordService) Encode(record *ClearanceRecord) *RReco
 	return &RRecord{
 		Id: record.Id,
 		Bid: record.Bid,
-		SourceUserId: record.SourceAccount.GetUserId(),
-		DestUserId: record.DestAccount.GetUserId(),
+		SourceUserId: record.SourceAccount.UserId,
+		DestUserId: record.DestAccount.UserId,
 		Role: "unknown",
 		Amount: record.Amount,
 		Ratio: record.Ratio,
