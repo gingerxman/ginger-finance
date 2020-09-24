@@ -1,6 +1,7 @@
 package imoney
 
 import (
+	"github.com/davecgh/go-spew/spew"
 	m_imoney "github.com/gingerxman/ginger-finance/models/imoney"
 )
 
@@ -21,6 +22,7 @@ func (this *Imoney) ExchangeCash(amount int) int {
 	}
 	
 	//TODO: 兑换成现金，改进浮点计算
+	spew.Dump(this)
 	return int(this.ExchangeRate * float64(amount))
 }
 

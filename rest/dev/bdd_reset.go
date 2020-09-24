@@ -2,6 +2,7 @@ package dev
 
 import (
 	"github.com/gingerxman/eel"
+	"github.com/gingerxman/ginger-finance/business/imoney"
 )
 
 type BDDReset struct {
@@ -28,6 +29,9 @@ func (this *BDDReset) GetParameters() map[string][]string {
 
 func (this *BDDReset) Put(ctx *eel.Context) {
 	bCtx := ctx.GetBusinessContext()
+	imoney.Imoneys = make([]*imoney.Imoney, 0)
+	imoney.Code2Imoney = make(map[string]*imoney.Imoney)
+	
 	o := eel.GetOrmFromContext(bCtx)
 	
 	o.Exec("delete from system_trigger_log")

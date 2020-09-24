@@ -2,7 +2,6 @@ package clearance
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gingerxman/eel"
 	"github.com/gingerxman/eel/config"
 	"github.com/gingerxman/ginger-finance/business/clearance"
@@ -60,7 +59,6 @@ func (this *OrderClearance) Put(ctx *eel.Context){
 	
 	if sync {
 		// do settlement
-		spew.Dump(recordIds)
 		clearance.NewSettleService(bCtx).DoSettle(recordIds)
 	}
 	

@@ -98,6 +98,7 @@ func (this *Transfer) TableName() string {
 type SystemTriggerLog struct{
 	Id int `gorm:"primary_key"`
 	RowId int
+	Code string `orm:"size(125);default('')"`
 	Name string `orm:"size(1024);default('')"`
 	Status string `orm:"size(128);default('')"`
 	Msg string `orm:"size(1024);default('')"`

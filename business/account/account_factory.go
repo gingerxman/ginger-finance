@@ -6,7 +6,7 @@ import (
 	"github.com/gingerxman/ginger-finance/business"
 	"strconv"
 	"strings"
-
+	
 	"github.com/gingerxman/eel"
 	b_imoney "github.com/gingerxman/ginger-finance/business/imoney"
 	m_account "github.com/gingerxman/ginger-finance/models/account"
@@ -95,6 +95,7 @@ func (this *AccountFactory) GetOrCreate(params CreateAccountParams) *Account{
 			ImoneyCode: imoneyCode,
 			IsDebtable: isDebtable,
 			IsDeleted: false,
+			Balance: 0,
 		}
 		db := o.Create(&dbModel)
 		if err := db.Error; err != nil{

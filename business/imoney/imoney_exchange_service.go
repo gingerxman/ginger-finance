@@ -2,6 +2,7 @@ package imoney
 
 import (
 	"context"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gingerxman/eel"
 )
 
@@ -15,12 +16,15 @@ func (this *ImoneyExchangeService) ExchangeByImoneyCode(sourceImoneyCode, destIm
 	if sourceImoneyCode == destImoneyCode{
 		return sourceAmount
 	}
+	spew.Dump(sourceImoneyCode)
+	spew.Dump(destImoneyCode)
 	sourceImoney := NewImoneyRepository(this.Ctx).GetByCode(sourceImoneyCode)
 	destImoney := NewImoneyRepository(this.Ctx).GetByCode(destImoneyCode)
 	return this.Exchange(sourceImoney, destImoney, sourceAmount)
 }
 
 func (this *ImoneyExchangeService) Exchange(sourceImoney, destImoney *Imoney, amount int) int {
+	spew.Dump(sourceImoney)
 	sourceCashAmount := sourceImoney.ExchangeCash(amount)
 	
 	return int(float64(sourceCashAmount) * destImoney.ExchangeRate)

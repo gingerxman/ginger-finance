@@ -68,7 +68,7 @@ func (this *AccountRepository) GetByUser(user business.IUser, imoneyCode string)
 
 func (this *AccountRepository) GetByUserId(userId int, imoneyCode string) *Account{
 	var accountCode string
-	accountCode = fmt.Sprintf("%s_%d", imoneyCode, userId)
+	accountCode = fmt.Sprintf("%s.%d", imoneyCode, userId)
 	return this.GetByCode(accountCode)
 }
 
@@ -79,7 +79,7 @@ func (this *AccountRepository) formatAccountCodesFromUserIds(userIds []int, imon
 		if userId == 0{
 			accountCode = imoneyCode
 		}else{
-			accountCode = fmt.Sprintf("%s_%d", imoneyCode, userId)
+			accountCode = fmt.Sprintf("%s.%d", imoneyCode, userId)
 		}
 
 		accountCodes = append(accountCodes, accountCode)
@@ -114,7 +114,7 @@ func (this *AccountRepository) GetByUserIds(userIds []int, imoneyCode string) []
 		accounts = append(accounts, accountFactory.GetOrCreate(CreateAccountParams{
 			UserId: iUserId,
 			ImoneyCode: imoneyCode,
-			AccountCode: fmt.Sprintf("%s_%d", imoneyCode, iUserId),
+			AccountCode: fmt.Sprintf("%s.%d", imoneyCode, iUserId),
 		}))
 	}
 	return accounts

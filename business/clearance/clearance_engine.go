@@ -36,7 +36,7 @@ type clearanceEngine struct{
 
 // getOrderParams 从ginger-mall service获取订单信息
 func (this *clearanceEngine) getOrderParams(orderBid, orderStatus string) *params.OrderParams{
-	resp, err := eel.NewResource(this.Ctx).Get("ginger-mall", "order.order", eel.Map{
+	resp, err := eel.NewResource(this.Ctx).Get("ginger-order", "order.order", eel.Map{
 		"bid": orderBid,
 	})
 	if err != nil{

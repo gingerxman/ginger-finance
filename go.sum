@@ -30,6 +30,8 @@ github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/gingerxman/eel v0.0.0-20200517140759-674b85252b35 h1:yZ44FIU9WCkvG+D41wGsCqYcF1SkEwb0LeDObFcL9t0=
 github.com/gingerxman/eel v0.0.0-20200517140759-674b85252b35/go.mod h1:3X6+z4RdDgNRU8uli+xxhK/lIgfRuDPr2LIFQMyhmHE=
+github.com/gingerxman/eel v0.0.0-20200610034400-b56e2a25af50 h1:FT0fqXA2ZKe8kCCTJrKonXZb00Smy5Zzkekc2fAgIag=
+github.com/gingerxman/eel v0.0.0-20200610034400-b56e2a25af50/go.mod h1:3X6+z4RdDgNRU8uli+xxhK/lIgfRuDPr2LIFQMyhmHE=
 github.com/gingerxman/gorm v1.10.3 h1:6RpFygs1SIfydtpnRaCpc6wjBDF16LkHT94SuFNr8AE=
 github.com/gingerxman/gorm v1.10.3/go.mod h1:ieZuWDmJo3kpFdWDTaT2LchtC7Znkn22hBXcF7Spl6Y=
 github.com/gingerxman/gorm v1.10.4 h1:NGg3f6eBrxp1yGLhMni0wk73ONv78AwCCN+CYfD+MmU=
